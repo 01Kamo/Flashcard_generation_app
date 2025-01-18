@@ -105,16 +105,20 @@ st.markdown(
     unsafe_allow_html=True
 )
 
-# --- User Feedback ---
-st.subheader("How easy was this?")
-difficulty = st.radio("Rate your confidence level:", ["Difficult 😣", "Okay 😐", "Easy 😊"], horizontal=True)
-
-# Update spaced repetition schedule
+# --- "Next Flashcard" Button ---
 if st.button("Next Flashcard"):
+    # Show rating after moving to next flashcard
+    difficulty = st.radio("Rate your confidence level:", ["Difficult 😣", "Okay 😐", "Easy 😊"], horizontal=True)
+
+    # Update spaced repetition schedule
     score = {"Difficult 😣": 0, "Okay 😐": 1, "Easy 😊": 2}[difficulty]
     st.session_state.review_schedule[flashcard.name] = get_next_review_date(score)
-    st.session_state.progress[student_id] += 1  # Update leaderboard progress
-    st.session_state
+    
+    # Ensure that the data in session_state is serializable (convert numpy.int64 to int)
+    st.session_state.progress[student_id] = int(st.session_state.progress[student_id] + 1)  # Update leaderboard progress
+
+    # No rerun, just update session state
+    st.experimental_rerun()
 
 # --- Leaderboard ---
 st.subheader("🏆 Leaderboard")

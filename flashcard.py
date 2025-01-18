@@ -114,7 +114,7 @@ if st.button("Next Flashcard"):
     score = {"Difficult 😣": 0, "Okay 😐": 1, "Easy 😊": 2}[difficulty]
     st.session_state.review_schedule[flashcard.name] = get_next_review_date(score)
     st.session_state.progress[student_id] += 1  # Update leaderboard progress
-    st.experimental_rerun()
+    st.experimental_user().rerun()
 
 # --- Leaderboard ---
 st.subheader("🏆 Leaderboard")

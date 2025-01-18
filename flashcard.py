@@ -117,8 +117,8 @@ if st.button("Next Flashcard"):
     # Ensure that the data in session_state is serializable (convert numpy.int64 to int)
     st.session_state.progress[student_id] = int(st.session_state.progress[student_id] + 1)  # Update leaderboard progress
 
-    # No rerun, just update session state
-    st.experimental_rerun()
+    # Update session state for new flashcard
+    st.session_state.flashcards_displayed[student_id].append(flashcard.name)
 
 # --- Leaderboard ---
 st.subheader("🏆 Leaderboard")
@@ -129,3 +129,4 @@ st.dataframe(leaderboard_data, hide_index=True, use_container_width=True)
 
 # --- Footer ---
 st.sidebar.info("Created by AI Flashcard Trainer 🚀")
+

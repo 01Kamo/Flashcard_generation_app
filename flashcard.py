@@ -98,7 +98,7 @@ st.markdown(
     <style>
         .flip-card {{
             background-color: transparent;
-            width: 450px;
+            width: 300px;
             height: 300px;
             perspective: 1000px;
             display: flex;
@@ -106,7 +106,7 @@ st.markdown(
         }}
         .flip-card-inner {{
             position: relative;
-            width: 450px;
+            width: 300px;
             height: 300px;
             text-align: center;
             transform-style: preserve-3d;

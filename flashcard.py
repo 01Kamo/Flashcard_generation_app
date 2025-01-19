@@ -3,6 +3,9 @@ import pandas as pd
 import random
 import datetime
 
+# --- Set page configuration (MUST be first Streamlit command) ---
+st.set_page_config(page_title="Flashcard Trainer", layout="wide")
+
 # --- Spaced Repetition Logic ---
 def get_next_review_date(score):
     """Determine the next review date based on the score"""
@@ -14,6 +17,17 @@ def get_next_review_date(score):
         return datetime.date.today() + datetime.timedelta(days=7)  # Review in 7 days
     else:
         return datetime.date.today() + datetime.timedelta(days=14)  # Review in 2 weeks
+
+# --- Hide Sidebar (Move this below set_page_config) ---
+st.markdown(
+    """
+    <style>
+        [data-testid="stSidebar"] {display: none;}
+        [data-testid="stAppViewContainer"] {margin-left: 0px;}
+    </style>
+    """,
+    unsafe_allow_html=True
+)
 
 # --- Load Mistake Data ---
 data = {
@@ -35,7 +49,7 @@ data = {
 
 df = pd.DataFrame(data)
 
-# Initialize session state variables
+# --- Initialize session state variables ---
 if "seen_flashcards" not in st.session_state:
     st.session_state.seen_flashcards = {student: set() for student in df["Student_ID"].unique()}
 
@@ -49,9 +63,6 @@ if "flashcards_displayed" not in st.session_state:
     st.session_state.flashcards_displayed = {student: [] for student in df["Student_ID"].unique()}
 
 # --- Streamlit UI ---
-st.set_page_config(page_title="Flashcard Trainer", layout="wide")
-
-# --- Header ---
 st.title("📝 Smart Flashcard Trainer")
 st.write("Improve your grammar and vocabulary with AI-generated flashcards!")
 
@@ -63,43 +74,79 @@ student_id = st.selectbox("Select Your Student ID", df["Student_ID"].unique())
 # Filter data for the selected student
 student_data = df[df["Student_ID"] == student_id]
 
-# --- Check for due flashcards ---
+# --- Flashcard Selection ---
 today = datetime.date.today()
 due_flashcards = student_data[student_data.index.isin(st.session_state.review_schedule.keys())]
 
 if due_flashcards.empty:
-    # Show unseen flashcards first
     unseen_flashcards = student_data[~student_data.index.isin(st.session_state.seen_flashcards[student_id])]
-
     if unseen_flashcards.empty:
-        # If all flashcards are seen, reset the list
         st.session_state.seen_flashcards[student_id] = set()
         unseen_flashcards = student_data
 
-    # Pick one unseen flashcard
     flashcard = unseen_flashcards.sample(1).iloc[0]
     st.session_state.seen_flashcards[student_id].add(flashcard.name)
 else:
-    # Pick a flashcard from the due reviews
     flashcard = due_flashcards.sample(1).iloc[0]
 
-# --- Colorful Flashcards ---
+# --- Flip Flashcard UI ---
 flashcard_colors = ["#FFDDC1", "#FFABAB", "#FFC3A0", "#D5AAFF", "#85E3FF", "#B9FBC0"]
 flashcard_color = random.choice(flashcard_colors)
 
 st.markdown(
     f"""
-    <div style="
-        background-color: {flashcard_color}; 
-        padding: 20px; 
-        border-radius: 10px; 
-        text-align: center; 
-        font-size: 20px;
-        font-weight: bold;
-    ">
-        <p style="color: #000;">❌ Incorrect: {flashcard.Original_Sentence}</p>
-        <hr style="border: 1px solid #000;">
-        <p style="color: #000;">✅ Correct: {flashcard.Corrected_Sentence}</p>
+    <style>
+        .flip-card {{
+            background-color: transparent;
+            width: 450px;
+            height: 300px;
+            perspective: 1000px;
+            display: flex;
+            justify-content: center;
+        }}
+        .flip-card-inner {{
+            position: relative;
+            width: 450px;
+            height: 300px;
+            text-align: center;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+        }}
+        .flip-card:hover .flip-card-inner {{
+            transform: rotateY(180deg);
+        }}
+        .flip-card-front, .flip-card-back {{
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 10px;
+            font-size: 18px;
+            font-weight: bold;
+        }}
+        .flip-card-front {{
+            background-color: {flashcard_color};
+            color: black;
+        }}
+        .flip-card-back {{
+            background-color: #D5AAFF;
+            color: black;
+            transform: rotateY(180deg);
+        }}
+    </style>
+
+    <div class="flip-card">
+        <div class="flip-card-inner">
+            <div class="flip-card-front">
+                ❌ Incorrect: {flashcard.Original_Sentence}
+            </div>
+            <div class="flip-card-back">
+                ✅ Correct: {flashcard.Corrected_Sentence}
+            </div>
+        </div>
     </div>
     """,
     unsafe_allow_html=True
@@ -107,7 +154,6 @@ st.markdown(
 
 # --- "Next Flashcard" Button ---
 if st.button("Next Flashcard"):
-    # Show rating after moving to next flashcard
     difficulty = st.radio("Rate your confidence level:", ["Difficult 😣", "Okay 😐", "Easy 😊"], horizontal=True)
 
     # Update spaced repetition schedule
@@ -128,5 +174,4 @@ leaderboard_data = leaderboard_data.sort_values(by="Flashcards Reviewed", ascend
 st.dataframe(leaderboard_data, hide_index=True, use_container_width=True)
 
 # --- Footer ---
-st.sidebar.info("Created by AI Flashcard Trainer 🚀")
-
+st.markdown("Designed for Efficient Learning 🚀")
